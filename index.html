@@ -73,7 +73,7 @@
     <!-- Controls -->
     <div class="controls">
       <button onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
-      <a href="#" onclick="copyShare();return false;">📋 Share</a>
+      <a href="#" onclick="copyShare();return false;" id="shareBtn">📋 Share</a>
       <!-- <a href="#" onclick="burstConfetti(200);return false;" style="font-size:.65rem;opacity:.5;padding:4px 8px" title="Test confetti">🎊</a> -->
     </div>
 
@@ -194,20 +194,15 @@ function getTZ(){
 // ======== SHARE / COPY ========
 let shareCard=null;
 function copyShare(){
-  const d=document.getElementById('days').textContent;
-  const h=document.getElementById('hours').textContent;
-  const m=document.getElementById('mins').textContent;
-  const s=document.getElementById('secs').textContent;
-  const txt=`🎆 New Year 2027 Countdown 🎆\n${d}d ${h}h ${m}m ${s}s\nMade with Nova 👀`;
+  const txt='🎆 New Year Countdown 2027 🎆\n'+window.location.href;
   navigator.clipboard.writeText(txt).then(()=>{
-    if(shareCard){
-      clearTimeout(shareCard);
-      document.querySelector('[onclick="copyShare()"]').textContent='📋 Copied!';
-    }else{
-      document.querySelector('[onclick="copyShare()"]').textContent='📋 Copied!';
-    }
+    const btn=document.getElementById('shareBtn');
+    btn.textContent='✅ Copied!';
+    btn.style.borderColor='#6bcb77';
+    if(shareCard)clearTimeout(shareCard);
     shareCard=setTimeout(()=>{
-      document.querySelector('[onclick="copyShare()"]').textContent='📋 Share';
+      btn.textContent='📋 Share';
+      btn.style.borderColor='';
       shareCard=null;
     },2000);
   }).catch(()=>alert('Could not copy!\n\n'+txt));
