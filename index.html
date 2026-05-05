@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Year Countdown 2027</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  /* ---------- Dark (default) theme ---------- */
+  :root {
+    --bg1: #0f0c29;
+    --bg2: #302b63;
+    --bg3: #24243e;
+    --text: #fff;
+    --text-muted: rgba(255,255,255,.6);
+    --card-bg: rgba(255,255,255,.07);
+    --card-border: rgba(255,255,255,.1);
+    --card-hover: rgba(255,255,255,.12);
+    --progress-bg: rgba(255,255,255,.1);
+  }
+  body.light {
+    --bg1: #f5f7fa;
+    --bg2: #c3cfe2;
+    --bg3: #e8ecf1;
+    --text: #222;
+    --text-muted: rgba(0,0,0,.55);
+    --card-bg: rgba(255,255,255,.6);
+    --card-border: rgba(0,0,0,.1);
+    --card-hover: rgba(255,255,255,.85);
+    --progress-bg: rgba(0,0,0,.1);
+  }
+
+  body{background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);padding:20px;transition:background .5s,color .3s;overflow-x:hidden}
+
+  /* fireworks canvas */
+  #fw{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  .above-fw{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%}
+
+  h1{font-size:clamp(.85rem,2vw,1.3rem);font-weight:300;letter-spacing:.15em;text-transform:uppercase;margin-bottom:18px;background:linear-gradient(90deg,#b85e00,#b87a00);-webkit-background-clip:text;-webkit-text-fill-color:transparent}body:not(.light) h1{background:linear-gradient(90deg,#f7971e,#ffd200);-webkit-background-clip:text}
+  .year{font-size:clamp(2.2rem,5vw,4rem);font-weight:700;margin-bottom:4px;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(10px,2vw,20px);max-width:680px;width:100%;margin-bottom:24px}
+  .card{background:var(--card-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;padding:clamp(12px,3vw,24px);text-align:center;border:1px solid var(--card-border);transition:transform .2s,background .3s}
+  .card:hover{transform:translateY(-4px);background:var(--card-hover)}
+  .card .num{font-size:clamp(1.8rem,5vw,3.5rem);font-weight:700;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .card .label{font-size:clamp(.65rem,1.5vw,.85rem);text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px}
+  .message{font-size:clamp(.9rem,2vw,1.2rem);color:var(--text-muted);font-weight:300;letter-spacing:.05em}
+  .progress-wrap{width:100%;max-width:680px;margin-top:16px;background:var(--progress-bg);border-radius:10px;height:8px;overflow:hidden}
+  .progress{height:100%;width:0%;border-radius:10px;background:linear-gradient(90deg,#667eea,#764ba2,#f093fb,#f5576c);background-size:200% 100%;transition:width .3s}
+  .emoji{font-size:clamp(1.2rem,3vw,2rem);margin-bottom:6px}
+
+  /* Controls bar — top-right floating */
+  .controls{position:fixed;top:16px;right:16px;z-index:10;display:flex;gap:6px}
+  .controls button,.controls a{background:var(--card-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--card-border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:.75rem;cursor:pointer;transition:background .2s,transform .1s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;line-height:1}
+  .controls button:hover,.controls a:hover{background:var(--card-hover);transform:translateY(-1px)}
+
+  .tz-label{font-size:clamp(.7rem,1.3vw,.85rem);color:var(--text-muted);margin-bottom:16px;font-weight:300;letter-spacing:.04em}
+  .pct-label{font-size:clamp(.75rem,1.4vw,.9rem);color:var(--text-muted);margin-top:6px;font-weight:400;letter-spacing:.03em}
+
+  /* ---- confetti ---- */
+  .confetti-piece{position:fixed;width:10px;height:10px;top:-20px;z-index:999;pointer-events:none;animation:confettiFall linear forwards}
+  @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+</style>
+</head>
+<body>
+  <!-- Fireworks canvas (behind everything) -->
+  <canvas id="fw"></canvas>
+
+  <div class="above-fw">
+    <div class="year" id="year"></div>
+    <h1 id="headline">New Year Countdown</h1>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+      <a href="#" onclick="copyShare();return false;">📋 Share</a>
+      <!-- <a href="#" onclick="burstConfetti(200);return false;" style="font-size:.65rem;opacity:.5;padding:4px 8px" title="Test confetti">🎊</a> -->
+    </div>
+
+    <!-- Timezone label -->
+    <div class="tz-label" id="tzLabel"></div>
+
+    <div class="grid">
+      <div><div class="card"><div class="num" id="days">--</div><div class="label">Days</div></div></div>
+      <div><div class="card"><div class="num" id="hours">--</div><div class="label">Hours</div></div></div>
+      <div><div class="card"><div class="num" id="mins">--</div><div class="label">Minutes</div></div></div>
+      <div><div class="card"><div class="num" id="secs">--</div><div class="label">Seconds</div></div></div>
+    </div>
+    <div class="message" id="message"></div>
+    <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+    <div class="pct-label" id="pctLabel">0.0%</div>
+  </div>
+
+<script>
+// ======== CONFETTI ========
+function burstConfetti(count=200){
+  const colors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#f093fb','#fd5e53','#a29bfe','#fd79a8'];
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.left=Math.random()*100+'vw';
+    el.style.width=(5+Math.random()*8)+'px';
+    el.style.height=(5+Math.random()*8)+'px';
+    el.style.background=colors[Math.floor(Math.random()*colors.length)];
+    el.style.borderRadius=Math.random()>.5?'50%':'2px';
+    el.style.animationDuration=(2+Math.random()*3)+'s';
+    el.style.animationDelay=(Math.random()*.8)+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),5000);
+  }
+}
+
+// ======== FIREWORKS (canvas) ========
+const cvs=document.getElementById('fw');
+const ctx=cvs.getContext('2d');
+let fwActive=false,fwParticles=[],fwAnimId=null;
+
+function resizeFW(){cvs.width=window.innerWidth;cvs.height=window.innerHeight}
+window.addEventListener('resize',resizeFW);
+resizeFW();
+
+class FWParticle{
+  constructor(x,y){
+    this.x=x;this.y=y;
+    const a=Math.random()*Math.PI*2,v=.5+Math.random()*2.5;
+    this.vx=Math.cos(a)*v;this.vy=Math.sin(a)*v;
+    this.life=1;
+    this.decay=.008+Math.random()*.015;
+    this.hue=Math.random()*360;
+    this.size=2+Math.random()*3;
+  }
+  update(){
+    this.x+=this.vx;this.y+=this.vy;
+    this.vy+=.035; // gravity
+    this.life-=this.decay;
+  }
+  draw(){
+    ctx.globalAlpha=Math.max(0,this.life);
+    ctx.fillStyle=`hsl(${this.hue},100%,60%)`;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.size*this.life,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function launchFirework(){
+  const x=Math.random()*cvs.width;
+  const y=50+Math.random()*(cvs.height*.5);
+  const count=60+Math.floor(Math.random()*60);
+  for(let i=0;i<count;i++)fwParticles.push(new FWParticle(x,y));
+}
+
+function fwLoop(){
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  fwParticles=fwParticles.filter(p=>p.life>0);
+  for(const p of fwParticles){p.update();p.draw()}
+  if(fwActive){
+    if(Math.random()<.08)launchFirework();
+    fwAnimId=requestAnimationFrame(fwLoop);
+  }else{
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    fwParticles=[];
+  }
+}
+
+function startFireworks(){if(!fwActive){fwActive=true;fwParticles=[];fwLoop()}}
+function stopFireworks(){fwActive=false;if(fwAnimId){cancelAnimationFrame(fwAnimId);fwAnimId=null}}
+
+// ======== THEME TOGGLE ========
+let isDark=true;
+function toggleTheme(){
+  isDark=!isDark;
+  document.body.className=isDark?'':'light';
+  document.getElementById('themeBtn').innerHTML=isDark?'🌙 Dark':'☀️ Light';
+}
+// persist from system pref
+if(window.matchMedia('(prefers-color-scheme:light)').matches){
+  isDark=false;
+  document.body.className='light';
+  document.getElementById('themeBtn').innerHTML='☀️ Light';
+}
+
+// ======== TIMEZONE ========
+function getTZ(){
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
+  const off=new Date().getTimezoneOffset();
+  const sign=off<=0?'+':'-';
+  const abs=Math.abs(off);
+  const h=String(Math.floor(abs/60)).padStart(2,'0');
+  const m=String(abs%60).padStart(2,'0');
+  return `${tz} (UTC${sign}${h}:${m})`;
+}
+
+// ======== SHARE / COPY ========
+let shareCard=null;
+function copyShare(){
+  const d=document.getElementById('days').textContent;
+  const h=document.getElementById('hours').textContent;
+  const m=document.getElementById('mins').textContent;
+  const s=document.getElementById('secs').textContent;
+  const txt=`🎆 New Year 2027 Countdown 🎆\n${d}d ${h}h ${m}m ${s}s\nMade with Nova 👀`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    if(shareCard){
+      clearTimeout(shareCard);
+      document.querySelector('[onclick="copyShare()"]').textContent='📋 Copied!';
+    }else{
+      document.querySelector('[onclick="copyShare()"]').textContent='📋 Copied!';
+    }
+    shareCard=setTimeout(()=>{
+      document.querySelector('[onclick="copyShare()"]').textContent='📋 Share';
+      shareCard=null;
+    },2000);
+  }).catch(()=>alert('Could not copy!\n\n'+txt));
+}
+
+// ======== MAIN LOOP ========
+function update(){
+  const now=new Date();
+  const targetYear=2027;
+  document.getElementById('year').textContent=targetYear;
+  const ny=new Date(targetYear,0,1,0,0,0,0);
+  const diff=ny-now;
+  const d=Math.max(0,Math.floor(diff/86400000));
+  const h=Math.max(0,Math.floor((diff%86400000)/3600000));
+  const m=Math.max(0,Math.floor((diff%3600000)/60000));
+  const s=Math.max(0,Math.floor((diff%60000)/1000));
+
+  document.getElementById('days').textContent=String(d).padStart(2,'0');
+  document.getElementById('hours').textContent=String(h).padStart(2,'0');
+  document.getElementById('mins').textContent=String(m).padStart(2,'0');
+  document.getElementById('secs').textContent=String(s).padStart(2,'0');
+
+  // timezone
+  document.getElementById('tzLabel').textContent=`📍 ${getTZ()}`;
+
+  // progress
+  const yearStart=new Date(targetYear-1,0,1);
+  const total=ny-yearStart;
+  const elapsed=now-yearStart;
+  const pct=Math.min((elapsed/total)*100,100);
+  document.getElementById('progress').style.width=pct+'%';
+  document.getElementById('pctLabel').textContent=pct.toFixed(1)+'% of 2026 done';
+
+  const hitZero=diff<=0;
+
+  // ----- HAPPY NEW YEAR -----
+  if(hitZero){
+    document.getElementById('message').textContent='🎊 Happy New Year 2027! 🎊';
+    document.getElementById('progress').style.width='100%';
+    document.getElementById('pctLabel').textContent='100% — 2026 is complete!';
+    stopFireworks();
+    burstConfetti(300);
+    return;
+  }
+
+  // ----- Fireworks (< 1 day) -----
+  if(d<1){
+    startFireworks();
+    document.getElementById('message').textContent='🎆 Less than a day left! 🎆';
+  }else if(d<30){
+    stopFireworks();
+    document.getElementById('message').textContent=`🎄 Only ${d} days left! Getting close!`;
+  }else{
+    stopFireworks();
+    document.getElementById('message').textContent='⏳ Time keeps ticking...';
+  }
+
+  // update share text periodically
+}
+update();
+setInterval(update,1000);
+
+// pre-emptive clear on visibility change
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopFireworks()}});
+</script>
+</body>
+</html>
