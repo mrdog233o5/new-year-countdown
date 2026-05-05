@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>New Year Countdown 2027</title>
+<title>New Year Countdown</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
 
@@ -211,7 +211,7 @@ function copyShare(){
 // ======== MAIN LOOP ========
 function update(){
   const now=new Date();
-  const targetYear=2027;
+  const targetYear=now.getFullYear() + 1;
   document.getElementById('year').textContent=targetYear;
   const ny=new Date(targetYear,0,1,0,0,0,0);
   const diff=ny-now;
